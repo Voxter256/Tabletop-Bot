@@ -7,7 +7,6 @@ session = Session()
 
 
 class RSVP(Base):
-
     __tablename__ = 'rsvps'
 
     id = Column(Integer(), primary_key=True)

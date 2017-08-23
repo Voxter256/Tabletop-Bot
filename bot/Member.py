@@ -6,7 +6,6 @@ session = Session()
 
 
 class Member(Base):
-
     __tablename__ = 'members'
 
     id = Column(Integer(), primary_key=True)
