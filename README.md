@@ -82,9 +82,6 @@ Clear all Suggestions
 
 !clear_messages
 Delete the last 1000 messages in the channel that are not pinned
-## Tests
-
-Describe and show how to run the tests with code examples.
 
 ## Contributors
 
