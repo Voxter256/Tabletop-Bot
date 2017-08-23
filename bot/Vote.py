@@ -7,7 +7,6 @@ session = Session()
 
 
 class Vote(Base):
-
     __tablename__ = 'votes'
 
     id = Column(Integer(), primary_key=True)

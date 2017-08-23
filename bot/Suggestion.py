@@ -7,7 +7,6 @@ session = Session()
 
 
 class Suggestion(Base):
-
     __tablename__ = 'suggestions'
 
     id = Column(Integer(), primary_key=True)
@@ -18,4 +17,3 @@ class Suggestion(Base):
 
     game = relationship("Game", uselist=False, backref=backref('suggestions'))
     author = relationship("Member", uselist=False, backref=backref('suggestions'))
-

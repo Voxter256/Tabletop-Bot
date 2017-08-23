@@ -16,7 +16,7 @@ This is a bot for Discord written in Python made to manage tabletop game nights.
 
 ## Motivation
 
-I desire to create a community of people who are interested in playing tabletop games on the regular, in small and larger group settings. Specifically, this is being used for Tabletop Simulator on steam, as most members of the server are not in the same metropolitan area as I am. This aids in me managing events in which people can attend whenever they are available.
+I desire to create a community of people who are interested in playing tabletop games on the regular, in small and larger group settings. Specifically, this is being used for Tabletop Simulator on Steam, as most members of the server are not in the same metropolitan area as I am. This aids in me managing events in which people can attend whenever they are available.
 
 ## Installation
 
@@ -56,7 +56,7 @@ View all current suggestions
 Display all the board games suggested so far
 
 !vote
-Vote on a game once voting has begun. If your game isn't picked, your voting power increases by one for next time, otherwise it reset to one
+Vote on a game once voting has begun. If your game isn't picked, your voting power increases by one for next time, otherwise it resets to one
 
 !power
 Display your current voting power

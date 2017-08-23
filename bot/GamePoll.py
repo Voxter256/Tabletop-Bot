@@ -7,7 +7,6 @@ session = Session()
 
 
 class GamePoll(Base):
-
     __tablename__ = 'game_polls'
 
     id = Column(Integer(), primary_key=True)
