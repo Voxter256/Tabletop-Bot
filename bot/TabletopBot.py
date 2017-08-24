@@ -24,7 +24,8 @@ class TabletopBot(discord.Client):
     def __init__(self):
         self.session = Session()
 
-        self.config = self.open_config()
+        config_file = "config\\options.ini"
+        self.config = self.open_config(config_file)
         self.bound_channel = None
 
         self.available_commands = {
@@ -54,18 +55,19 @@ class TabletopBot(discord.Client):
         except ClientOSError:
             asyncio.sleep(60)
             self.run()
-            
+
     @staticmethod
-    def open_config():
+    def open_config(config_file):
         config_parser = configparser.ConfigParser()
-        config_parser.read("config\\options.ini")
+        config_parser.read(config_file)
 
         # TODO Fall-backs
         config = {
             "_login_token": config_parser.get('Credentials', 'Token'),
             "owner_id": config_parser.get('Permissions', 'OwnerID'),
             "command_prefix": config_parser.get('Chat', 'CommandPrefix'),
-            "bound_channels": config_parser.get('Chat', 'BindToChannels')
+            "bound_channels": config_parser.get('Chat', 'BindToChannels'),
+            "mention_group_id": config_parser.get('Chat', 'MentionGroupID')
         }
         return config
 
@@ -282,10 +284,11 @@ class TabletopBot(discord.Client):
 
         current_player_count = len(self.session.query(RSVP).filter(RSVP.event_id == event_id).all())
         if current_player_count == 1:
-            message_to_send = "Ok I've got you down! There is currently 1 person attending"
+            count_message = "is currently 1 person"
         else:
-            message_to_send = "Ok I've got you down! There are currently {0} people attending".format(
+            count_message = "are currently {0} people".format(
                 current_player_count)
+        message_to_send = "Ok I've got you down! There {0} attending".format(count_message)
         await self.send_message_safe(self.bound_channel, message_to_send, 0, delete=False)
         return
 
@@ -318,10 +321,11 @@ class TabletopBot(discord.Client):
 
         current_player_count = len(self.session.query(RSVP).filter(RSVP.event_id == event_id).all())
         if current_player_count == 1:
-            message_to_send = "Sorry to hear you have to cancel! There is now 1 person attending"
+            count_message = "1 person"
         else:
-            message_to_send = "Sorry to hear you have to cancel! There is now {0} people attending".format(
+            count_message = "{0} people".format(
                 current_player_count)
+        message_to_send = "Sorry to hear you have to cancel! There is now {0} attending".format(count_message)
         await self.send_message_safe(self.bound_channel, message_to_send, 0, delete=False)
         return
 
@@ -396,9 +400,10 @@ class TabletopBot(discord.Client):
         member = self.get_member(message)
         member_power = member.power
         if member_power == 1:
-            message_to_send = "Your vote currently counts as 1 vote"
+            count_message = "1 vote"
         else:
-            message_to_send = "Your vote currently counts as " + str(member_power) + " votes"
+            count_message = str(member_power) + " votes"
+        message_to_send = "Your vote currently counts as " + count_message
         await self.send_message_safe(self.bound_channel, message_to_send, 60)
         return
 
@@ -461,7 +466,8 @@ class TabletopBot(discord.Client):
             .first()
         rsvp_count = event_rsvps.count
 
-        directions_string = "@Meeples\n It's time to vote on games for " + this_event.name + "!" + \
+        directions_string = self.get_mention_group_string() + "\n" + \
+                            " It's time to vote on games for " + this_event.name + "!" + \
                             " Use the !vote command followed by the game's id below (e.g. !vote 1).\n" + \
                             " Voting ends at " + voting_over.strftime("%H:%M %Z on %m/%d") + "\n" + \
                             " There are currently " + str(rsvp_count) + " attendees, so keep player counts in mind." + \
@@ -481,7 +487,7 @@ class TabletopBot(discord.Client):
         await self.delete_message(message)
         await asyncio.sleep((voting_duration * 60 * 60) - (5 * 60))
 
-        message_to_send = "@Meeples 5 minutes left to vote!"
+        message_to_send = self.get_mention_group_string() + " 5 minutes left to vote!"
         this_message = await self.send_message_safe(self.bound_channel, message_to_send, 0, delete=False)
         self.session.add(Message(message_id=this_message.id))
         self.session.commit()
@@ -543,8 +549,8 @@ class TabletopBot(discord.Client):
             time_till_event_string = " less than an hour"
         else:
             time_till_event_string = days_string + hours_string
-        message_to_send = "@Meeples\nNew Event Created!\n{0.id}) {0.name} in {1}.".format(new_event,
-                                                                                          time_till_event_string)
+        message_to_send = self.get_mention_group_string() + "\n" + \
+                          "New Event Created!\n{0.id}) {0.name} in {1}.".format(new_event, time_till_event_string)
         await self.send_message_safe(self.bound_channel, message_to_send, 0, delete=False)
         return
 
@@ -628,10 +634,12 @@ class TabletopBot(discord.Client):
         winner = current_vote_totals[0]
 
         # announce winner
+        message_to_send = self.get_mention_group_string() + " " + winner.title + \
+                          " won with " + str(winner.vote_quantity)
         if winner.vote_quantity == 1:
-            message_to_send = winner.title + " won with " + str(winner.vote_quantity) + " vote!"
+            message_to_send += " vote!"
         else:
-            message_to_send = winner.title + " won with " + str(winner.vote_quantity) + " votes!"
+            message_to_send += " votes!"
         await self.send_message_safe(self.bound_channel, message_to_send, 0, delete=False)
 
         # delete all messages related to this poll
@@ -703,7 +711,7 @@ class TabletopBot(discord.Client):
     def get_member(self, message):
         member = self.session.query(Member).filter(Member.name == str(message.author)).first()
         if member is None:
-            member = Member(name=str(message.author), power=1)
+            member = Member(discord_id=message.author.id, name=str(message.author), power=1)
             self.session.add(member)
             self.session.commit()
         return member
@@ -858,3 +866,7 @@ class TabletopBot(discord.Client):
             await self.delete_messages(messages_to_delete)
         elif number_messages_to_delete == 1:
             await self.delete_message(self.messages_to_delete_after_vote[0])
+
+    def get_mention_group_string(self):
+        mention_string = "<@" + self.config['mention_group_id'] + ">"
+        return mention_string
