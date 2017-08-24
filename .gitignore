@@ -1,6 +1,7 @@
 # Tabletop Discord Bot
 config/options.ini
 *bot.db
+*.db-journal
 
 # -- Python Section --
 # Byte-compiled / optimized / DLL files
