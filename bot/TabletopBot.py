@@ -7,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from sqlalchemy import func, desc
+from aiohttp.errors import ClientOSError
 
 from .Base import Session
 from .Event import Event
@@ -48,8 +49,12 @@ class TabletopBot(discord.Client):
         super().__init__()
 
     def run(self):
-        self.loop.run_until_complete(self.start(self.config["_login_token"]))
-
+        try:
+            self.loop.run_until_complete(self.start(self.config["_login_token"]))
+        except ClientOSError:
+            asyncio.sleep(60)
+            self.run()
+            
     @staticmethod
     def open_config():
         config_parser = configparser.ConfigParser()
@@ -90,8 +95,10 @@ class TabletopBot(discord.Client):
         print(str(message.author) + ": " + message.content)
         command = message.content[1:].split(" ")
 
+        command_title = command[0].lower()
+
         try:
-            await self.available_commands[command[0]](message, command)
+            await self.available_commands[command_title](message, command)
         except KeyError:
             await self.send_message_safe(self.bound_channel, "Not a valid command", 0, delete=False)
 
