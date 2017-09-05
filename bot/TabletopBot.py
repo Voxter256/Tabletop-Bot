@@ -80,10 +80,12 @@ class TabletopBot(discord.Client):
         poll = self.session.query(GamePoll).first()
         if poll is not None and poll.active:
             time_left = (poll.finish_time - datetime.now()).total_seconds()
-            if time_left > 0:
-                end_time = datetime.now() + timedelta(seconds=time_left)
-                print("Voting over at: " + end_time.strftime("%c"))
-                await asyncio.sleep(time_left)
+            if time_left <= 0:
+                time_left = 0
+
+            end_time = datetime.now() + timedelta(seconds=time_left)
+            print("Voting over at: " + end_time.strftime("%c"))
+            await asyncio.sleep(time_left)
             await self.finalize_vote()
 
     async def on_message(self, message):
@@ -216,9 +218,6 @@ class TabletopBot(discord.Client):
             "Suggest a board game to play",
             "[suggestion] can be a game title to search, a BoardGameGeek game url, " +
             "or the numerical game ID from the url\n",
-
-            "!suggestions",
-            "View all current suggestions\n",
 
             "!show",
             "Display all the board games suggested so far\n",
@@ -453,7 +452,7 @@ class TabletopBot(discord.Client):
             await self.delete_message(message)
             return
 
-        voting_duration = int(command[1])
+        voting_duration = int(hours_string)
         voting_over = datetime.now() + timedelta(hours=voting_duration)
 
         self.session.add(GamePoll(active=True, finish_time=voting_over, event_id=event_id))
@@ -467,21 +466,24 @@ class TabletopBot(discord.Client):
         rsvp_count = event_rsvps.count
 
         directions_string = self.get_mention_group_string() + "\n" + \
-                            " It's time to vote on games for " + this_event.name + "!" + \
-                            " Use the !vote command followed by the game's id below (e.g. !vote 1).\n" + \
-                            " Voting ends at " + voting_over.strftime("%H:%M %Z on %m/%d") + "\n" + \
-                            " There are currently " + str(rsvp_count) + " attendees, so keep player counts in mind." + \
-                            " There will be multiple groups if there are enough players to do so." + \
-                            " RSVP count isn't finalized, as anyone can cancel or join last minute."
+            " It's time to vote on games for " + this_event.name + "!" + \
+            " Use the !vote command followed by the game's id below (e.g. !vote 1).\n" + \
+            " Voting ends at " + voting_over.strftime("%H:%M %Z on %m/%d") + "\n" + \
+            " There are currently " + str(rsvp_count) + " attendees, so keep player counts in mind." + \
+            " There will be multiple groups if there are enough players to do so." + \
+            " RSVP count isn't finalized, as anyone can cancel or join last minute."
         directions_message = await self.send_message_safe(self.bound_channel, directions_string, 0, delete=False)
         self.session.add(Message(message_id=directions_message.id))
 
+        suggestions_list = []
         for suggestion in self.session.query(Suggestion.vote_number, Game.title, Game.url).join(Game).all():
             message_to_send = str(suggestion.vote_number) + ") " + suggestion.title + " | <" + \
                               suggestion.url + ">"
-            this_message = await self.send_message_safe(self.bound_channel, message_to_send, 0, delete=False)
-            self.session.add(Message(message_id=this_message.id))
+            suggestions_list.append(message_to_send)
 
+        combined_suggestions = "\n".join(suggestions_list)
+        this_message = await self.send_message_safe(self.bound_channel, combined_suggestions, 0, delete=False)
+        self.session.add(Message(message_id=this_message.id))
         self.session.commit()
 
         await self.delete_message(message)
@@ -868,5 +870,5 @@ class TabletopBot(discord.Client):
             await self.delete_message(self.messages_to_delete_after_vote[0])
 
     def get_mention_group_string(self):
-        mention_string = "<@" + self.config['mention_group_id'] + ">"
+        mention_string = "<@&" + self.config['mention_group_id'] + ">"
         return mention_string

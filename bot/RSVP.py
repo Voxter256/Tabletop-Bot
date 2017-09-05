@@ -13,5 +13,5 @@ class RSVP(Base):
     event_id = Column(Integer(), ForeignKey('events.id'), index=True)
     member_id = Column(Integer(), ForeignKey('members.id'), index=True)
 
-    member = relationship("Member", uselist=False, backref=backref('rsvp'))
-    event = relationship("Event", uselist=False, backref=backref('rsvp'))
+    member = relationship("Member", uselist=False, backref=backref('rsvps'))
+    event = relationship("Event", uselist=False, backref=backref('rsvps'))

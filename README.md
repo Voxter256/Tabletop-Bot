@@ -52,9 +52,6 @@ Suggest a board game to play
 !suggestions
 View all current suggestions
 
-!show
-Display all the board games suggested so far
-
 !vote
 Vote on a game once voting has begun. If your game isn't picked, your voting power increases by one for next time, otherwise it resets to one
 
