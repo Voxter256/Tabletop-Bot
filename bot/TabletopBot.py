@@ -537,6 +537,7 @@ class TabletopBot(discord.Client):
         self.session.add(new_event)
         self.session.commit()
 
+        event_date_long = new_event.date.strftime("%A %B %d at %I:%M %p")
         event_time_delta = new_event.date - datetime.now()
         delta_days = event_time_delta.days
         days_string = "1 day" if delta_days == 1 else str(delta_days) + " days"
@@ -552,7 +553,9 @@ class TabletopBot(discord.Client):
         else:
             time_till_event_string = days_string + hours_string
         message_to_send = self.get_mention_group_string() + "\n" + \
-                          "New Event Created!\n{0.id}) {0.name} in {1}.".format(new_event, time_till_event_string)
+            "New Event Created: ({0.id}) {0.name}\n".format(new_event) + \
+            "Event Date: {0}\n".format(event_date_long) + \
+            "Time till Event: {0}.".format(time_till_event_string)
         await self.send_message_safe(self.bound_channel, message_to_send, 0, delete=False)
         return
 
