@@ -10,7 +10,7 @@ from aiohttp.errors import ClientOSError
 from bs4 import BeautifulSoup
 from sqlalchemy import func, desc
 
-from bot.models.Messages import Message
+from .models.Messages import Message
 from .Base import Session
 from .models.Event import Event
 from .models.Game import Game

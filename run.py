@@ -10,4 +10,4 @@ if __name__ == '__main__':
 
     # TODO Make sure there is a bot.db file, create an empty one if not
     # TODO Unit Tests
-    # TODO SetupTools, Docker
+    # TODO Docker

@@ -1,0 +1,6 @@
+discord.py==0.16.8
+requests==2.14.2
+beautifulsoup4==4.6.0
+sqlalchemy==1.1.13
+boardgamegeek==0.13.2
+lxml==3.8.0
