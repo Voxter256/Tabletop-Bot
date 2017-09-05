@@ -106,6 +106,10 @@ class TabletopBot(discord.Client):
         except KeyError:
             await self.send_message_safe(self.bound_channel, "Not a valid command", 0, delete=False)
 
+    async def on_message_edit(self, before, after):
+        if before.content != after.content:
+            await self.on_message(after)
+
     async def ping(self, message, command):
         await self.send_message_safe(self.bound_channel, 'Pong!', 0, delete=False)
 
