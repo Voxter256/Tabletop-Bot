@@ -1,23 +1,24 @@
 import asyncio
 import configparser
-import discord
 import html
 import re
-import requests
-from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-from sqlalchemy import func, desc
-from aiohttp.errors import ClientOSError
 
+import discord
+import requests
+from aiohttp.errors import ClientOSError
+from bs4 import BeautifulSoup
+from sqlalchemy import func, desc
+
+from bot.models.Messages import Message
 from .Base import Session
-from .Event import Event
-from .Game import Game
-from .GamePoll import GamePoll
-from .Member import Member
-from .Messages import Message
-from .RSVP import RSVP
-from .Suggestion import Suggestion
-from .Vote import Vote
+from .models.Event import Event
+from .models.Game import Game
+from .models.GamePoll import GamePoll
+from .models.Member import Member
+from .models.RSVP import RSVP
+from .models.Suggestion import Suggestion
+from .models.Vote import Vote
 
 
 class TabletopBot(discord.Client):
