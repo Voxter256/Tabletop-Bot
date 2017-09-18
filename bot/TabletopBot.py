@@ -645,7 +645,7 @@ class TabletopBot(discord.Client):
 
         # announce winner
         message_to_send = self.get_mention_group_string() + " " + winner.title + \
-                          " won with " + str(winner.vote_quantity)
+                          " won with " + str(winner.vote_quantity) + " | <" + winner.url + ">"
         if winner.vote_quantity == 1:
             message_to_send += " vote!"
         else:
@@ -709,6 +709,7 @@ class TabletopBot(discord.Client):
             Suggestion.vote_number,
             Game.bgg_id.label("game_id"),
             Game.title,
+            Game.url,
             func.sum(Member.power).label('vote_quantity')) \
             .join(Game) \
             .outerjoin(Vote).outerjoin(Member) \
