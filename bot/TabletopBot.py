@@ -651,12 +651,15 @@ class TabletopBot(discord.Client):
         winner = current_vote_totals[0]
 
         # announce winner
-        message_to_send = self.get_mention_group_string() + " " + winner.title + \
-                          " won with " + str(winner.vote_quantity) + " | <" + winner.url + ">"
+        message_to_send = self.get_mention_group_string() + " " + winner.title + " won with " + \
+            str(winner.vote_quantity)
         if winner.vote_quantity == 1:
             message_to_send += " vote!"
         else:
             message_to_send += " votes!"
+
+        message_to_send += " | <" + winner.url + ">"
+
         await self.send_message_safe(self.bound_channel, message_to_send, 0, delete=False)
 
         # delete all messages related to this poll
