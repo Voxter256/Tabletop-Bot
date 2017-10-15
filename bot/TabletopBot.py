@@ -146,12 +146,6 @@ class TabletopBot(discord.Client):
             await self.send_message_safe(self.bound_channel, message_to_send, 30)
             return
 
-        poll_active = self.session.query(GamePoll.active).first()
-        if poll_active:
-            output_string = "Voting is active, no more suggestions until it is finished!"
-            await self.send_message_safe(self.bound_channel, output_string, 10)
-            return
-
         game_id = await self.get_game_id(bgg_query, bgg_query_long)
         game_database_entry = self.session.query(Game).filter(Game.bgg_id == game_id).first()
         if game_database_entry is None:
@@ -203,6 +197,19 @@ class TabletopBot(discord.Client):
         self.session.commit()
 
         await self.output_suggestion_game_info(game_info)
+
+        poll_active = self.session.query(GamePoll.active).first()
+        if poll_active:
+            suggestions_list = []
+            for suggestion in self.session.query(Suggestion.vote_number, Game.title, Game.url).join(Game).all():
+                message_to_send = str(suggestion.vote_number) + ") " + suggestion.title + " | <" + \
+                                  suggestion.url + ">"
+                suggestions_list.append(message_to_send)
+
+            combined_suggestions = "\n".join(suggestions_list)
+            this_message = await self.send_message_safe(self.bound_channel, combined_suggestions, 0, delete=False)
+            self.session.add(Message(message_id=this_message.id))
+            self.session.commit()
 
     async def help(self, message, command):
         string_list = [
