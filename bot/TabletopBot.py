@@ -6,19 +6,19 @@ from datetime import datetime, timedelta
 
 import discord
 import requests
-from aiohttp.errors import ClientOSError
+from aiohttp import ClientOSError
 from bs4 import BeautifulSoup
 from sqlalchemy import func, desc
 
-from .models.Messages import Message
-from .Base import Session
-from .models.Event import Event
-from .models.Game import Game
-from .models.GamePoll import GamePoll
-from .models.Member import Member
-from .models.RSVP import RSVP
-from .models.Suggestion import Suggestion
-from .models.Vote import Vote
+from bot.models.Messages import Message
+from bot.Base import Session
+from bot.models.Event import Event
+from bot.models.Game import Game
+from bot.models.GamePoll import GamePoll
+from bot.models.Member import Member
+from bot.models.RSVP import RSVP
+from bot.models.Suggestion import Suggestion
+from bot.models.Vote import Vote
 
 
 class TabletopBot(discord.Client):
@@ -65,16 +65,15 @@ class TabletopBot(discord.Client):
         # TODO Fall-backs
         config = {
             "_login_token": config_parser.get('Credentials', 'Token'),
-            "owner_id": config_parser.get('Permissions', 'OwnerID'),
+            "owner_id": int(config_parser.get('Permissions', 'OwnerID')),
             "command_prefix": config_parser.get('Chat', 'CommandPrefix'),
-            "bound_channels": config_parser.get('Chat', 'BindToChannels'),
+            "bound_channels": int(config_parser.get('Chat', 'BindToChannels')),
             "mention_group_id": config_parser.get('Chat', 'MentionGroupID')
         }
         return config
 
     async def on_ready(self):
         print('Logged in as ' + self.user.name)
-
         self.bound_channel = self.get_channel(self.config['bound_channels'])
         print("Bound to: " + self.bound_channel.name)
 
@@ -231,7 +230,7 @@ class TabletopBot(discord.Client):
             "[suggestion] can be a game title to search, a BoardGameGeek game url, " +
             "or the numerical game ID from the url\n",
 
-            "!show",
+            "!suggestions",
             "Display all the board games suggested so far\n",
 
             "!vote",
@@ -627,8 +626,8 @@ class TabletopBot(discord.Client):
                     return False
             return True
 
-        pinned_messages = await self.pins_from(self.bound_channel)
-        await self.purge_from(self.bound_channel, limit=1000, check=is_pinned)
+        pinned_messages = await message.channel.pins()
+        await message.channel.purge(limit=1000, check=is_pinned)
         for item in self.session.query(Message).all():
             self.session.delete(item)
         self.session.commit()
@@ -839,10 +838,17 @@ class TabletopBot(discord.Client):
         else:
             return response_message
 
+    async def send_message(self, channel, content=None, **kwargs):
+        return await channel.send(content=content, **kwargs)
+
+    @staticmethod
+    async def delete_message(message):
+        await message.delete()
+
     async def get_game_id(self, bgg_query, bgg_query_long):
-        regex_url = re.fullmatch('^(https://)(www.)*(boardgamegeek.com/boardgame/)[\d]+/[\w\d-]*', bgg_query)
+        regex_url = re.fullmatch(r'^https://(www\.)?boardgamegeek\.com/boardgame/[\d]+[\w\d-]*', bgg_query)
         if regex_url is not None:
-            game_id_match = re.search('/[\d]+/', regex_url.string)
+            game_id_match = re.search(r'[\d]+', regex_url.string)
             if game_id_match is None:
                 # TODO real exception?
                 print("Error: URL inconsistent")
@@ -883,11 +889,19 @@ class TabletopBot(discord.Client):
             self.session.delete(item)
 
         number_messages_to_delete = len(messages_to_delete)
-        if number_messages_to_delete > 1:
+        if number_messages_to_delete >= 1:
             await self.delete_messages(messages_to_delete)
-        elif number_messages_to_delete == 1:
-            await self.delete_message(self.messages_to_delete_after_vote[0])
+        # elif number_messages_to_delete == 1:
+        #     await self.delete_message(self.messages_to_delete_after_vote[0])
 
+    @staticmethod
+    async def get_message(channel, id):
+        return await channel.fetch_message(id)
+
+    async def delete_messages(self, messages):
+        await self.bound_channel.delete_messages(messages)
+         
+    
     def get_mention_group_string(self):
         mention_string = "<@&" + self.config['mention_group_id'] + ">"
         return mention_string
