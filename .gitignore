@@ -3,6 +3,9 @@ config/options.ini
 *bot.db
 *.db-journal
 
+# Visual Studio Code
+.vscode/
+
 # -- Python Section --
 # Byte-compiled / optimized / DLL files
 __pycache__/
