@@ -9,4 +9,3 @@ if __name__ == '__main__':
     bot.run()
 
     # TODO Unit Tests
-    # TODO Docker
