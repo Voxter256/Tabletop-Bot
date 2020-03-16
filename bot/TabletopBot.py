@@ -856,7 +856,7 @@ class TabletopBot(discord.Client):
             else:
                 game_id = game_id_match.group(0)[1:-1]
         else:
-            regex_game_id = re.fullmatch('[\d]*', bgg_query)
+            regex_game_id = re.fullmatch(r'[\d]*', bgg_query)
             if regex_game_id is not None:
                 game_id = bgg_query
             else:
