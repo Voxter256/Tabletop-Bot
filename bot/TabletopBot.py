@@ -773,13 +773,13 @@ class TabletopBot(discord.Client):
 
         result_conclusions = {
             "Best": {
-                "number of players": None,
+                "number of players": 0,
                 "votes": 0
             },
             "Recommended": {
-                "min-title": None,
+                "min-title": "N/A",
                 "min-value": 1000,
-                "max-title": None,
+                "max-title": "N/A",
                 "max-value": -1
             }
         }
@@ -846,18 +846,12 @@ class TabletopBot(discord.Client):
         await message.delete()
 
     async def get_game_id(self, bgg_query, bgg_query_long):
-        regex_url = re.fullmatch(r'^https://(www\.)?boardgamegeek\.com/boardgame/[\d]+[\w\d-]*', bgg_query)
-        if regex_url is not None:
-            game_id_match = re.search(r'[\d]+', regex_url.string)
-            if game_id_match is None:
-                # TODO real exception?
-                print("Error: URL inconsistent")
-                return
-            else:
-                game_id = game_id_match.group(0)[1:-1]
+        regex_url = re.search(r'^https://(?:www\.)?boardgamegeek\.com/boardgame/([\d]+)[\w\d-]*', bgg_query)
+        if regex_url:
+            game_id = regex_url.group(1)
         else:
             regex_game_id = re.fullmatch(r'[\d]*', bgg_query)
-            if regex_game_id is not None:
+            if regex_game_id:
                 game_id = bgg_query
             else:
                 search_string = ""
